@@ -648,11 +648,28 @@
      HELPERS
   ════════════════════════════════ */
   function isTgPost(url) {
-    return /^https:\/\/t\.me\/[A-Za-z0-9_@]+\/\d+/.test(url || '');
+    return /^https:\/\/t\.me\/(s\/)?[A-Za-z0-9_@][A-Za-z0-9_@.]*\/\d+/.test(url || '');
   }
 
   function withProxy(url) {
     return 'https://wsrv.nl/?url=' + encodeURIComponent(url);
+  }
+
+  /* extract image URL from HTML — tries 4 og:image / twitter:image patterns */
+  function extractOgImage(html) {
+    var tries = [
+      /property=["']og:image["'][^>]*content=["']([^"']+)["']/i,
+      /content=["']([^"']+)["'][^>]*property=["']og:image["']/i,
+      /name=["']twitter:image["'][^>]*content=["']([^"']+)["']/i,
+      /content=["']([^"']+)["'][^>]*name=["']twitter:image["']/i
+    ];
+    for (var i = 0; i < tries.length; i++) {
+      var m = html.match(tries[i]);
+      if (m && m[1] && m[1].indexOf('http') === 0) {
+        return m[1].replace(/&amp;/g, '&');
+      }
+    }
+    return null;
   }
 
   /* load a direct image URL into an <img> element */
@@ -670,12 +687,12 @@
     img.src = src;
   }
 
-  /* fetch og:image from Telegram post, then show it in the preview */
+  /* fetch og:image from Telegram post, show it in the preview (2 proxy fallback) */
   function loadTgPreview(img, wrap, postUrl) {
+    var cleanUrl = postUrl.replace(/\?.*$/, '');
     img.style.display = 'none';
     wrap.classList.add('show');
 
-    /* show loading badge */
     var badge = wrap.querySelector('.tg-note');
     if (!badge) {
       badge = document.createElement('div');
@@ -684,22 +701,37 @@
     }
     badge.textContent = '⏳ Yuklanmoqda...';
 
-    fetch('https://api.allorigins.win/get?url=' + encodeURIComponent(postUrl))
-      .then(function(r) { return r.json(); })
-      .then(function(data) {
-        var tagM = (data.contents || '').match(/<meta[^>]+og:image[^>]+>/i);
-        if (!tagM) throw new Error('no tag');
-        var cM = tagM[0].match(/content="([^"]+)"/i);
-        if (!cM) throw new Error('no content');
-        var imgUrl = cM[1].replace(/&amp;/g, '&');
+    function applyImage(imgUrl) {
+      badge.remove();
+      img.style.display = '';
+      loadDirectImg(img, wrap, imgUrl);
+    }
 
-        badge.remove();
-        img.style.display = '';
-        loadDirectImg(img, wrap, imgUrl);
-      })
-      .catch(function() {
-        badge.textContent = '⚠️ Rasm topilmadi';
-      });
+    function tryProxy1() {
+      fetch('https://api.allorigins.win/get?url=' + encodeURIComponent(cleanUrl))
+        .then(function(r) { if (!r.ok) throw new Error(); return r.json(); })
+        .then(function(data) {
+          var url = extractOgImage(data.contents || '');
+          if (!url) throw new Error('no image');
+          applyImage(url);
+        })
+        .catch(tryProxy2);
+    }
+
+    function tryProxy2() {
+      fetch('https://corsproxy.io/?' + encodeURIComponent(cleanUrl))
+        .then(function(r) { if (!r.ok) throw new Error(); return r.text(); })
+        .then(function(html) {
+          var url = extractOgImage(html);
+          if (!url) throw new Error('no image');
+          applyImage(url);
+        })
+        .catch(function() {
+          badge.textContent = '⚠️ Rasm topilmadi — to\'g\'ridan rasm URL ishlating';
+        });
+    }
+
+    tryProxy1();
   }
 
   /* ════════════════════════════════

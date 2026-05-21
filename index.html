@@ -394,14 +394,31 @@
     catch { return []; }
   }
 
-  /* ── is this a t.me post link? ── */
+  /* ── t.me post URL detector (handles /s/ preview format too) ── */
   function isTgPost(url) {
-    return /^https:\/\/t\.me\/[A-Za-z0-9_@]+\/\d+/.test(url || '');
+    return /^https:\/\/t\.me\/(s\/)?[A-Za-z0-9_@][A-Za-z0-9_@.]*\/\d+/.test(url || '');
   }
 
   /* ── CORS image proxy fallback ── */
   function withProxy(url) {
     return 'https://wsrv.nl/?url=' + encodeURIComponent(url);
+  }
+
+  /* ── extract image URL from Telegram page HTML (tries 4 meta patterns) ── */
+  function extractOgImage(html) {
+    var tries = [
+      /property=["']og:image["'][^>]*content=["']([^"']+)["']/i,
+      /content=["']([^"']+)["'][^>]*property=["']og:image["']/i,
+      /name=["']twitter:image["'][^>]*content=["']([^"']+)["']/i,
+      /content=["']([^"']+)["'][^>]*name=["']twitter:image["']/i
+    ];
+    for (var i = 0; i < tries.length; i++) {
+      var m = html.match(tries[i]);
+      if (m && m[1] && m[1].indexOf('http') === 0) {
+        return m[1].replace(/&amp;/g, '&');
+      }
+    }
+    return null;
   }
 
   /* ── load a direct image URL into a container element ── */
@@ -422,30 +439,41 @@
     container.appendChild(img);
   }
 
-  /* ── fetch og:image from a Telegram post, then show only the photo ── */
+  /* ── fetch page HTML via CORS proxy, extract og:image, display it ── */
   function loadTgImage(container, postUrl) {
+    var cleanUrl = postUrl.replace(/\?.*$/, '');
+
     container.innerHTML =
       '<div class="img-placeholder">' +
       '<div class="ph-icon" style="animation:opPulse 1.2s ease infinite">⏳</div>' +
       '<span>Yuklanmoqda...</span></div>';
 
-    fetch('https://api.allorigins.win/get?url=' + encodeURIComponent(postUrl))
-      .then(function(r) { return r.json(); })
+    fetch('https://api.allorigins.win/get?url=' + encodeURIComponent(cleanUrl))
+      .then(function(r) {
+        if (!r.ok) throw new Error('proxy error');
+        return r.json();
+      })
       .then(function(data) {
-        var html = data.contents || '';
-        /* extract og:image regardless of attribute order */
-        var tagM = html.match(/<meta[^>]+og:image[^>]+>/i);
-        if (!tagM) throw new Error('no tag');
-        var cM = tagM[0].match(/content="([^"]+)"/i);
-        if (!cM) throw new Error('no content');
-        var imgUrl = cM[1].replace(/&amp;/g, '&');
+        var imgUrl = extractOgImage(data.contents || '');
+        if (!imgUrl) throw new Error('no image');
         container.innerHTML = '';
         loadDirectImage(container, imgUrl);
       })
       .catch(function() {
-        container.innerHTML =
-          '<div class="img-placeholder"><div class="ph-icon">👥</div>' +
-          '<span>Rasm topilmadi</span></div>';
+        /* second attempt: try corsproxy.io */
+        fetch('https://corsproxy.io/?' + encodeURIComponent(cleanUrl))
+          .then(function(r) { return r.text(); })
+          .then(function(html) {
+            var imgUrl = extractOgImage(html);
+            if (!imgUrl) throw new Error('no image');
+            container.innerHTML = '';
+            loadDirectImage(container, imgUrl);
+          })
+          .catch(function() {
+            container.innerHTML =
+              '<div class="img-placeholder"><div class="ph-icon">👥</div>' +
+              '<span>Rasm topilmadi</span></div>';
+          });
       });
   }
 
