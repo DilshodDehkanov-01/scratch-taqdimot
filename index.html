@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Scratch Loyihalar Taqdimoti — PDP School</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --primary:      #2563eb;
+      --primary-dark: #1d4ed8;
+      --bg:           #f1f5f9;
+      --white:        #ffffff;
+      --border:       #e2e8f0;
+      --text:         #1e293b;
+      --muted:        #64748b;
+      --radius:       16px;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* ─── HERO ─── */
+    .hero {
+      position: relative;
+      height: 460px;
+      /* default gradient — JS overrides with real image if set */
+      background-color: #0f172a;
+      background-image: linear-gradient(150deg, #0f172a 0%, #1e3a5f 55%, #1e1b4b 100%);
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    /* dark overlay so text stays readable on any photo */
+    .hero-overlay {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to bottom,
+        rgba(10, 22, 40, .45),
+        rgba(10, 22, 40, .78));
+      pointer-events: none;
+    }
+
+    /* decorative blobs */
+    .hero::before, .hero::after {
+      content: '';
+      position: absolute;
+      border-radius: 50%;
+      background: rgba(255,255,255,.04);
+      pointer-events: none;
+    }
+    .hero::before { width: 560px; height: 560px; top: -160px; right: -120px; }
+    .hero::after  { width: 320px; height: 320px; bottom: -90px; left: -60px; }
+
+    .hero-content {
+      position: relative;
+      z-index: 2;
+      text-align: center;
+      color: #fff;
+      padding: 0 24px;
+      max-width: 720px;
+    }
+
+    .hero-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 18px 6px 12px;
+      border-radius: 50px;
+      background: rgba(255,255,255,.12);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid rgba(255,255,255,.22);
+      font-size: .82rem;
+      font-weight: 500;
+      letter-spacing: .3px;
+      margin-bottom: 22px;
+    }
+
+    .live-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: #4ade80;
+      flex-shrink: 0;
+      animation: livePulse 2s ease-in-out infinite;
+    }
+    @keyframes livePulse {
+      0%,100% { box-shadow: 0 0 0 0 rgba(74,222,128,.5); }
+      50%      { box-shadow: 0 0 0 6px rgba(74,222,128,0); }
+    }
+
+    .hero h1 {
+      font-size: clamp(2.2rem, 5.5vw, 3.8rem);
+      font-weight: 900;
+      line-height: 1.1;
+      letter-spacing: -1.5px;
+      margin-bottom: 14px;
+      text-shadow: 0 4px 28px rgba(0,0,0,.35);
+    }
+    .hero h1 .accent {
+      background: linear-gradient(90deg, #fbbf24, #f97316);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .hero p {
+      font-size: 1.1rem;
+      color: rgba(255,255,255,.75);
+    }
+
+    /* ─── MAIN ─── */
+    main {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 52px 20px 72px;
+    }
+
+    .page-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 36px;
+    }
+    .page-title { font-size: 1.45rem; font-weight: 800; }
+    .count-badge {
+      background: var(--primary);
+      color: #fff;
+      font-size: .78rem;
+      font-weight: 700;
+      padding: 5px 16px;
+      border-radius: 50px;
+    }
+
+    /* ─── GRID ─── */
+    #projectsGrid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
+      gap: 24px;
+    }
+
+    /* ─── CARD ─── */
+    .card {
+      background: var(--white);
+      border-radius: var(--radius);
+      overflow: hidden;
+      border: 1px solid var(--border);
+      box-shadow: 0 2px 10px rgba(0,0,0,.06);
+      display: flex;
+      flex-direction: column;
+      transition: transform .25s ease, box-shadow .25s ease;
+    }
+    .card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 14px 44px rgba(0,0,0,.13);
+    }
+
+    .card-img-wrap {
+      height: 210px;
+      overflow: hidden;
+      background: linear-gradient(135deg, #dbeafe, #ede9fe);
+      flex-shrink: 0;
+    }
+    .card-img-wrap img {
+      width: 100%; height: 100%;
+      object-fit: cover;
+      display: block;
+      transition: transform .4s ease;
+    }
+    .card:hover .card-img-wrap img { transform: scale(1.04); }
+
+    .img-placeholder {
+      width: 100%; height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+    .img-placeholder .ph-icon { font-size: 3.2rem; opacity: .35; }
+    .img-placeholder span { font-size: .8rem; color: var(--muted); }
+
+    .card-body {
+      padding: 22px;
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+    }
+
+    .card-index {
+      font-size: .72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      color: var(--primary);
+      margin-bottom: 6px;
+    }
+
+    .card-team {
+      font-size: 1.05rem;
+      font-weight: 800;
+      color: var(--text);
+      margin-bottom: 10px;
+      line-height: 1.3;
+    }
+
+    .card-names {
+      flex: 1;
+      margin-bottom: 18px;
+    }
+    .name-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 3px 0;
+      font-size: .9rem;
+      font-weight: 500;
+      line-height: 1.45;
+    }
+    .name-row::before {
+      content: '';
+      width: 5px; height: 5px;
+      border-radius: 50%;
+      background: var(--primary);
+      flex-shrink: 0;
+    }
+
+    .card-actions { display: flex; gap: 10px; }
+
+    .btn {
+      flex: 1;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      padding: 11px 12px;
+      border-radius: 10px;
+      font-family: inherit;
+      font-size: .82rem;
+      font-weight: 700;
+      text-decoration: none;
+      letter-spacing: .15px;
+      transition: all .2s ease;
+      cursor: pointer;
+      border: none;
+      white-space: nowrap;
+    }
+    .btn svg { width: 15px; height: 15px; flex-shrink: 0; }
+
+    .btn-canva {
+      background: linear-gradient(135deg, #7c3aed, #a78bfa);
+      color: #fff;
+    }
+    .btn-canva:hover {
+      background: linear-gradient(135deg, #6d28d9, #8b5cf6);
+      box-shadow: 0 4px 16px rgba(124,58,237,.45);
+      transform: translateY(-1px);
+    }
+
+    .btn-scratch {
+      background: linear-gradient(135deg, #ea580c, #fb923c);
+      color: #fff;
+    }
+    .btn-scratch:hover {
+      background: linear-gradient(135deg, #c2410c, #ea580c);
+      box-shadow: 0 4px 16px rgba(234,88,12,.45);
+      transform: translateY(-1px);
+    }
+
+    /* ─── EMPTY STATE ─── */
+    #emptyState {
+      text-align: center;
+      padding: 90px 20px;
+    }
+    .empty-icon { font-size: 4.5rem; margin-bottom: 18px; opacity: .3; }
+    #emptyState h3 { font-size: 1.3rem; font-weight: 700; margin-bottom: 8px; }
+    #emptyState p { color: var(--muted); margin-bottom: 26px; }
+    .btn-go {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 28px;
+      background: var(--primary);
+      color: #fff;
+      border-radius: 10px;
+      text-decoration: none;
+      font-weight: 700;
+      font-size: .9rem;
+      transition: all .2s;
+    }
+    .btn-go:hover {
+      background: var(--primary-dark);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 18px rgba(37,99,235,.4);
+    }
+
+    /* ─── FOOTER ─── */
+    footer {
+      background: #0f172a;
+      color: rgba(255,255,255,.5);
+      text-align: center;
+      padding: 28px 20px;
+      font-size: .85rem;
+    }
+    footer strong { color: rgba(255,255,255,.9); }
+    footer a {
+      color: rgba(255,255,255,.35);
+      text-decoration: none;
+      margin-left: 18px;
+      font-size: .8rem;
+      transition: color .2s;
+    }
+    footer a:hover { color: rgba(255,255,255,.7); }
+
+    @keyframes opPulse {
+      0%, 100% { opacity: .35; }
+      50%       { opacity: .8;  }
+    }
+
+    /* ─── RESPONSIVE ─── */
+    @media (max-width: 600px) {
+      .hero { height: 360px; }
+      .hero h1 { letter-spacing: -.5px; }
+      .card-actions { flex-direction: column; }
+      #projectsGrid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ═══════════ HERO ═══════════ -->
+<header class="hero" id="heroHeader">
+  <div class="hero-overlay"></div>
+  <div class="hero-content">
+    <div class="hero-pill">
+      <span class="live-dot"></span>
+      PDP School &nbsp;·&nbsp; 5-sinf &nbsp;·&nbsp; 2024–2025
+    </div>
+    <h1>Scratch Loyihalar<br><span class="accent">Taqdimoti</span></h1>
+    <p>O'quvchilarning yaratuvchilik dunyosiga xush kelibsiz 🎉</p>
+  </div>
+</header>
+
+<!-- ═══════════ MAIN ═══════════ -->
+<main>
+  <div class="page-header">
+    <h2 class="page-title">Guruhlar va Loyihalar</h2>
+    <span class="count-badge" id="countBadge">0 ta guruh</span>
+  </div>
+
+  <div id="projectsGrid"></div>
+
+  <div id="emptyState" style="display:none">
+    <div class="empty-icon">📂</div>
+    <h3>Hali loyihalar qo'shilmagan</h3>
+    <p>Birinchi guruhni admin sahifadan qo'shing</p>
+    <a href="admin.html" class="btn-go">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+           style="width:16px;height:16px">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/>
+      </svg>
+      Guruh qo'shish
+    </a>
+  </div>
+</main>
+
+<!-- ═══════════ FOOTER ═══════════ -->
+<footer>
+  <strong>PDP School</strong> — Scratch Loyihalar Taqdimoti &copy; 2025
+  <a href="admin.html">⚙ Admin</a>
+</footer>
+
+<script>
+  const PROJECTS_KEY = 'scratch_projects';
+  const BANNER_KEY   = 'scratch_banner';
+
+  /* ── get projects from localStorage ── */
+  function getProjects() {
+    try { return JSON.parse(localStorage.getItem(PROJECTS_KEY)) || []; }
+    catch { return []; }
+  }
+
+  /* ── is this a t.me post link? ── */
+  function isTgPost(url) {
+    return /^https:\/\/t\.me\/[A-Za-z0-9_@]+\/\d+/.test(url || '');
+  }
+
+  /* ── CORS image proxy fallback ── */
+  function withProxy(url) {
+    return 'https://wsrv.nl/?url=' + encodeURIComponent(url);
+  }
+
+  /* ── load a direct image URL into a container element ── */
+  function loadDirectImage(container, src) {
+    var img = document.createElement('img');
+    img.alt = 'Guruh rasmi';
+    img.onerror = function() {
+      if (!this.dataset.proxy) {
+        this.dataset.proxy = '1';
+        this.src = withProxy(src);
+      } else {
+        container.innerHTML =
+          '<div class="img-placeholder"><div class="ph-icon">👥</div>' +
+          '<span>Rasm yuklanmadi</span></div>';
+      }
+    };
+    img.src = src;
+    container.appendChild(img);
+  }
+
+  /* ── fetch og:image from a Telegram post, then show only the photo ── */
+  function loadTgImage(container, postUrl) {
+    container.innerHTML =
+      '<div class="img-placeholder">' +
+      '<div class="ph-icon" style="animation:opPulse 1.2s ease infinite">⏳</div>' +
+      '<span>Yuklanmoqda...</span></div>';
+
+    fetch('https://api.allorigins.win/get?url=' + encodeURIComponent(postUrl))
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        var html = data.contents || '';
+        /* extract og:image regardless of attribute order */
+        var tagM = html.match(/<meta[^>]+og:image[^>]+>/i);
+        if (!tagM) throw new Error('no tag');
+        var cM = tagM[0].match(/content="([^"]+)"/i);
+        if (!cM) throw new Error('no content');
+        var imgUrl = cM[1].replace(/&amp;/g, '&');
+        container.innerHTML = '';
+        loadDirectImage(container, imgUrl);
+      })
+      .catch(function() {
+        container.innerHTML =
+          '<div class="img-placeholder"><div class="ph-icon">👥</div>' +
+          '<span>Rasm topilmadi</span></div>';
+      });
+  }
+
+  /* ── set hero background image ── */
+  function loadBanner() {
+    const url = localStorage.getItem(BANNER_KEY);
+    const hero = document.getElementById('heroHeader');
+    if (url) {
+      /* overrides the CSS gradient with the actual photo */
+      hero.style.backgroundImage = 'url("' + url.replace(/"/g, '%22') + '")';
+    }
+  }
+
+  /* ── build one project card ── */
+  function buildCard(p, idx) {
+    const card = document.createElement('div');
+    card.className = 'card';
+
+    /* --- image --- */
+    const wrap = document.createElement('div');
+    wrap.className = 'card-img-wrap';
+
+    if (p.image) {
+      if (isTgPost(p.image)) {
+        /* Telegram post → extract og:image, show only the photo */
+        loadTgImage(wrap, p.image);
+      } else {
+        /* Regular URL → direct load with CORS-proxy fallback */
+        loadDirectImage(wrap, p.image);
+      }
+    } else {
+      wrap.innerHTML =
+        '<div class="img-placeholder">' +
+        '<div class="ph-icon">👥</div>' +
+        '<span>Rasm qo\'shilmagan</span>' +
+        '</div>';
+    }
+    card.appendChild(wrap);
+
+    /* --- body --- */
+    const body = document.createElement('div');
+    body.className = 'card-body';
+
+    const indexEl = document.createElement('div');
+    indexEl.className = 'card-index';
+    indexEl.textContent = 'Guruh #' + (idx + 1);
+    body.appendChild(indexEl);
+
+    if (p.teamName) {
+      const teamEl = document.createElement('div');
+      teamEl.className = 'card-team';
+      teamEl.textContent = p.teamName;
+      body.appendChild(teamEl);
+    }
+
+    const namesEl = document.createElement('div');
+    namesEl.className = 'card-names';
+    const names = (p.names || '')
+      .split(/[\n,]/)
+      .map(function(n) { return n.trim(); })
+      .filter(Boolean);
+
+    names.forEach(function(name) {
+      const row = document.createElement('div');
+      row.className = 'name-row';
+      row.textContent = name;
+      namesEl.appendChild(row);
+    });
+    body.appendChild(namesEl);
+
+    /* --- buttons --- */
+    const actions = document.createElement('div');
+    actions.className = 'card-actions';
+
+    const canvaBtn = document.createElement('a');
+    canvaBtn.className = 'btn btn-canva';
+    canvaBtn.href   = p.canvaLink  || '#';
+    canvaBtn.target = '_blank';
+    canvaBtn.rel    = 'noopener noreferrer';
+    canvaBtn.innerHTML =
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">' +
+      '<rect x="3" y="3" width="18" height="18" rx="2.5"/>' +
+      '<path d="M3 9h18M9 21V9"/></svg>' +
+      'Canva Taqdimot';
+
+    const scratchBtn = document.createElement('a');
+    scratchBtn.className = 'btn btn-scratch';
+    scratchBtn.href   = p.scratchLink || '#';
+    scratchBtn.target = '_blank';
+    scratchBtn.rel    = 'noopener noreferrer';
+    scratchBtn.innerHTML =
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">' +
+      '<polygon points="5,3 19,12 5,21" stroke-linejoin="round"/></svg>' +
+      'Scratch Loyiha';
+
+    actions.appendChild(canvaBtn);
+    actions.appendChild(scratchBtn);
+    body.appendChild(actions);
+    card.appendChild(body);
+    return card;
+  }
+
+  /* ── render all projects ── */
+  function render() {
+    const projects = getProjects();
+    const grid  = document.getElementById('projectsGrid');
+    const empty = document.getElementById('emptyState');
+    const badge = document.getElementById('countBadge');
+
+    badge.textContent = projects.length + ' ta guruh';
+    grid.innerHTML = '';
+
+    if (projects.length === 0) {
+      empty.style.display = 'block';
+      return;
+    }
+    empty.style.display = 'none';
+    projects.forEach(function(p, i) { grid.appendChild(buildCard(p, i)); });
+  }
+
+  /* ── init ── */
+  loadBanner();
+  render();
+
+  /* update when admin changes data in another tab */
+  window.addEventListener('storage', function(e) {
+    if (e.key === PROJECTS_KEY) render();
+    if (e.key === BANNER_KEY)   loadBanner();
+  });
+</script>
+</body>
+</html>

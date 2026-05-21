@@ -1,0 +1,1034 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Panel — Scratch Loyihalar</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --primary:      #2563eb;
+      --primary-dark: #1d4ed8;
+      --danger:       #dc2626;
+      --success:      #16a34a;
+      --bg:           #f1f5f9;
+      --white:        #ffffff;
+      --border:       #e2e8f0;
+      --text:         #1e293b;
+      --muted:        #64748b;
+      --label:        #374151;
+      --radius:       14px;
+      --sm:           8px;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* ─── TOPBAR ─── */
+    .topbar {
+      background: #0f172a;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .topbar-inner {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 0 20px;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: rgba(255,255,255,.55);
+      text-decoration: none;
+      font-size: .85rem;
+      font-weight: 500;
+      transition: color .2s;
+      white-space: nowrap;
+    }
+    .back-link:hover { color: rgba(255,255,255,.9); }
+    .back-link svg { width: 15px; height: 15px; }
+    .topbar-title {
+      font-size: 1rem; font-weight: 700; color: #fff; flex: 1;
+    }
+    .topbar-badge {
+      background: rgba(37,99,235,.9);
+      color: #fff;
+      font-size: .72rem; font-weight: 700;
+      padding: 3px 12px; border-radius: 50px; letter-spacing: .3px;
+    }
+
+    /* ─── LAYOUT ─── */
+    .container {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 36px 20px 72px;
+      display: flex;
+      flex-direction: column;
+      gap: 28px;
+    }
+
+    /* ─── PANEL ─── */
+    .panel {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: 0 2px 10px rgba(0,0,0,.05);
+      overflow: hidden;
+    }
+    .panel-header {
+      padding: 18px 24px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .panel-icon {
+      width: 36px; height: 36px;
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.1rem; flex-shrink: 0;
+    }
+    .panel-icon.blue   { background: #dbeafe; }
+    .panel-icon.green  { background: #dcfce7; }
+    .panel-icon.slate  { background: #f1f5f9; }
+    .panel-title { font-size: 1rem; font-weight: 700; }
+    .panel-sub   { font-size: .8rem; color: var(--muted); margin-top: 2px; }
+    .panel-body  { padding: 24px; }
+
+    /* ─── FORM ELEMENTS ─── */
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-bottom: 16px;
+    }
+    .form-group:last-child { margin-bottom: 0; }
+
+    label {
+      font-size: .82rem;
+      font-weight: 600;
+      color: var(--label);
+    }
+
+    /* ALL inputs are type="text" — avoids browser URL validation blocking form */
+    input[type="text"],
+    textarea {
+      width: 100%;
+      padding: 10px 14px;
+      border: 1.5px solid var(--border);
+      border-radius: var(--sm);
+      font-family: inherit;
+      font-size: .9rem;
+      color: var(--text);
+      background: var(--bg);
+      transition: border-color .2s, box-shadow .2s;
+      outline: none;
+      resize: vertical;
+    }
+    input[type="text"]:focus,
+    textarea:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(37,99,235,.15);
+      background: #fff;
+    }
+    input[type="text"]::placeholder,
+    textarea::placeholder { color: #94a3b8; }
+    textarea { min-height: 88px; line-height: 1.6; }
+
+    .hint { font-size: .76rem; color: var(--muted); margin-top: 2px; }
+
+    /* image preview */
+    .preview-wrap { display: none; margin-top: 10px; }
+    .preview-wrap.show { display: block; }
+    .preview-img {
+      max-width: 260px; max-height: 150px;
+      border-radius: var(--sm);
+      border: 1px solid var(--border);
+      object-fit: cover;
+      display: block;
+    }
+    .tg-note {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 10px 14px;
+      background: #e8f4fd;
+      border: 1px solid #bee3f8;
+      border-radius: var(--sm);
+      font-size: .8rem; font-weight: 600; color: #2b6cb0;
+    }
+
+    /* ─── BUTTONS ─── */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      padding: 11px 22px;
+      border-radius: var(--sm);
+      font-family: inherit;
+      font-size: .88rem; font-weight: 700;
+      cursor: pointer;
+      border: none;
+      transition: all .2s ease;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+    .btn svg { width: 16px; height: 16px; flex-shrink: 0; }
+
+    .btn-primary { background: var(--primary); color: #fff; }
+    .btn-primary:hover {
+      background: var(--primary-dark);
+      box-shadow: 0 4px 14px rgba(37,99,235,.4);
+      transform: translateY(-1px);
+    }
+
+    .btn-success { background: var(--success); color: #fff; }
+    .btn-success:hover {
+      background: #15803d;
+      box-shadow: 0 4px 14px rgba(22,163,74,.4);
+      transform: translateY(-1px);
+    }
+
+    .btn-outline {
+      background: transparent;
+      color: var(--primary);
+      border: 1.5px solid var(--primary);
+    }
+    .btn-outline:hover { background: #eff6ff; }
+
+    .form-row {
+      display: flex; gap: 10px;
+      justify-content: flex-end;
+      margin-top: 8px;
+    }
+
+    /* small action buttons in list */
+    .btn-sm {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-family: inherit; font-size: .77rem; font-weight: 600;
+      cursor: pointer;
+      transition: all .2s;
+    }
+    .btn-sm svg { width: 13px; height: 13px; }
+
+    .btn-edit {
+      border: 1.5px solid #bfdbfe; background: #eff6ff; color: var(--primary);
+    }
+    .btn-edit:hover { background: var(--primary); border-color: var(--primary); color: #fff; }
+
+    .btn-delete {
+      border: 1.5px solid #fecaca; background: #fff1f2; color: var(--danger);
+    }
+    .btn-delete:hover { background: var(--danger); border-color: var(--danger); color: #fff; }
+
+    /* ─── LIST ─── */
+    #projectsList { display: flex; flex-direction: column; }
+
+    .list-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      padding: 16px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .list-item:last-child { border-bottom: none; }
+
+    .list-thumb {
+      width: 72px; height: 54px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, #dbeafe, #ede9fe);
+      border: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.6rem;
+      flex-shrink: 0;
+      overflow: hidden;
+    }
+    .list-thumb img {
+      width: 100%; height: 100%;
+      object-fit: cover;
+    }
+
+    .list-info { flex: 1; min-width: 0; }
+    .list-index {
+      font-size: .7rem; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 1px;
+      color: var(--primary); margin-bottom: 4px;
+    }
+    .list-team {
+      font-size: .92rem; font-weight: 700;
+      color: var(--text); margin-bottom: 2px;
+    }
+    .list-names {
+      font-size: .82rem; font-weight: 500;
+      color: var(--muted); margin-bottom: 6px;
+      line-height: 1.5;
+      overflow: hidden;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+    }
+    .list-links { display: flex; gap: 8px; flex-wrap: wrap; }
+    .chip {
+      display: inline-flex; align-items: center; gap: 4px;
+      font-size: .72rem; font-weight: 600;
+      padding: 3px 10px; border-radius: 50px;
+    }
+    .chip.canva   { background: #f3f0ff; color: #7c3aed; }
+    .chip.scratch { background: #fff4ed; color: #ea580c; }
+    .chip svg { width: 11px; height: 11px; }
+
+    .list-actions {
+      display: flex; flex-direction: column; gap: 6px; flex-shrink: 0;
+    }
+
+    .empty-list {
+      text-align: center; padding: 48px 20px; color: var(--muted);
+    }
+    .empty-list .icon { font-size: 2.5rem; margin-bottom: 10px; opacity: .3; }
+    .empty-list p { font-size: .9rem; }
+
+    /* ─── MODAL ─── */
+    .modal-backdrop {
+      position: fixed; inset: 0;
+      background: rgba(15,23,42,.6);
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+      z-index: 1000;
+      display: flex; align-items: center; justify-content: center;
+      padding: 20px;
+      animation: fadeIn .2s ease;
+    }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+    .modal {
+      background: var(--white);
+      border-radius: var(--radius);
+      width: 100%; max-width: 540px;
+      max-height: 90vh; overflow-y: auto;
+      box-shadow: 0 20px 60px rgba(0,0,0,.25);
+      animation: slideUp .25s ease;
+    }
+    @keyframes slideUp {
+      from { transform: translateY(20px); opacity: 0; }
+      to   { transform: translateY(0);    opacity: 1; }
+    }
+
+    .modal-header {
+      padding: 20px 24px;
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .modal-header h3 { font-size: 1rem; font-weight: 700; }
+    .modal-close {
+      width: 32px; height: 32px;
+      border-radius: 8px; border: none;
+      background: var(--bg); color: var(--muted);
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.1rem; transition: all .2s;
+    }
+    .modal-close:hover { background: #fee2e2; color: var(--danger); }
+
+    .modal-body   { padding: 24px; }
+    .modal-footer {
+      padding: 16px 24px;
+      border-top: 1px solid var(--border);
+      display: flex; justify-content: flex-end; gap: 10px;
+    }
+
+    /* ─── TOAST ─── */
+    #toastContainer {
+      position: fixed;
+      bottom: 24px; right: 20px;
+      z-index: 2000;
+      display: flex; flex-direction: column; gap: 10px;
+      pointer-events: none;
+    }
+    .toast {
+      display: flex; align-items: center; gap: 10px;
+      padding: 13px 18px;
+      border-radius: 12px;
+      font-size: .87rem; font-weight: 600;
+      color: #fff;
+      box-shadow: 0 6px 24px rgba(0,0,0,.18);
+      animation: toastIn .3s cubic-bezier(.34,1.56,.64,1);
+      pointer-events: auto;
+      min-width: 220px; max-width: 340px;
+    }
+    .toast.ok   { background: #15803d; }
+    .toast.err  { background: #dc2626; }
+    .toast.info { background: #1d4ed8; }
+    @keyframes toastIn {
+      from { transform: translateY(16px) scale(.92); opacity: 0; }
+      to   { transform: translateY(0)    scale(1);   opacity: 1; }
+    }
+    .toast.out { animation: toastOut .28s ease forwards; }
+    @keyframes toastOut {
+      to { transform: translateX(12px); opacity: 0; }
+    }
+
+    /* ─── RESPONSIVE ─── */
+    @media (max-width: 600px) {
+      .container { padding: 20px 14px 60px; }
+      .panel-body { padding: 18px 16px; }
+      .list-item { flex-wrap: wrap; }
+      .list-actions { flex-direction: row; width: 100%; }
+      .modal { max-height: 95vh; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ═══════════ TOPBAR ═══════════ -->
+<header class="topbar">
+  <div class="topbar-inner">
+    <a href="index.html" class="back-link">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5"/>
+      </svg>
+      Asosiy sahifa
+    </a>
+    <span class="topbar-title">⚙ Admin Panel</span>
+    <span class="topbar-badge" id="topBadge">0 ta guruh</span>
+  </div>
+</header>
+
+<!-- ═══════════ MAIN ═══════════ -->
+<div class="container">
+
+  <!-- ╔══ PANEL 1: Banner ══╗ -->
+  <div class="panel">
+    <div class="panel-header">
+      <div class="panel-icon blue">🖼️</div>
+      <div>
+        <div class="panel-title">Sinf Banner Rasmi</div>
+        <div class="panel-sub">Asosiy sahifadagi katta rasm URL-ini kiriting</div>
+      </div>
+    </div>
+    <div class="panel-body">
+      <div class="form-group">
+        <label for="bannerUrl">Rasm URL manzili</label>
+        <input type="text" id="bannerUrl"
+               placeholder="https://i.imgur.com/yourphoto.jpg"
+               autocomplete="off" />
+        <span class="hint">
+          Ochiq (to'g'ridan-to'g'ri ko'rinadigan) rasm havolasi kiriting.
+          Google Drive emas, Imgur yoki boshqa to'g'ri havolalarni ishlating.
+        </span>
+        <div class="preview-wrap" id="bannerPrevWrap">
+          <img class="preview-img" id="bannerPrevImg" src="" alt="Banner ko'rinishi" />
+        </div>
+      </div>
+      <div class="form-row">
+        <button type="button" class="btn btn-outline" id="clearBannerBtn">O'chirish</button>
+        <button type="button" class="btn btn-primary" id="saveBannerBtn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/>
+          </svg>
+          Saqlash
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ╔══ PANEL 2: Add ══╗ -->
+  <div class="panel">
+    <div class="panel-header">
+      <div class="panel-icon green">➕</div>
+      <div>
+        <div class="panel-title">Yangi Guruh Qo'shish</div>
+        <div class="panel-sub">Ma'lumotlar brauzer xotirasiga (LocalStorage) saqlanadi</div>
+      </div>
+    </div>
+    <div class="panel-body">
+
+      <div class="form-group">
+        <label for="addImage">Guruh Rasmi URL (ixtiyoriy)</label>
+        <input type="text" id="addImage"
+               placeholder="https://i.imgur.com/group.jpg"
+               autocomplete="off" />
+        <span class="hint">Bo'sh qoldirilsa avatar placeholder ko'rinadi</span>
+        <div class="preview-wrap" id="addPrevWrap">
+          <img class="preview-img" id="addPrevImg" src="" alt="Guruh rasmi ko'rinishi" />
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="addTeamName">Jamoa Nomi <span style="color:#dc2626">*</span></label>
+        <input type="text" id="addTeamName"
+               placeholder="Masalan: Kosmik Izlanuvchilar"
+               autocomplete="off" />
+      </div>
+
+      <div class="form-group">
+        <label for="addNames">O'quvchilar Ism-Familiyasi <span style="color:#dc2626">*</span></label>
+        <textarea id="addNames"
+                  placeholder="Alisher Karimov&#10;Zulfiya Nazarova&#10;Bobur Toshmatov"
+                  autocomplete="off"></textarea>
+        <span class="hint">Har bir ismni yangi qatorga yozing</span>
+      </div>
+
+      <div class="form-group">
+        <label for="addCanva">Canva Taqdimot Havolasi <span style="color:#dc2626">*</span></label>
+        <input type="text" id="addCanva"
+               placeholder="https://www.canva.com/design/..."
+               autocomplete="off" />
+      </div>
+
+      <div class="form-group">
+        <label for="addScratch">Scratch Loyiha Havolasi <span style="color:#dc2626">*</span></label>
+        <input type="text" id="addScratch"
+               placeholder="https://scratch.mit.edu/projects/..."
+               autocomplete="off" />
+      </div>
+
+      <div class="form-row">
+        <button type="button" class="btn btn-outline" id="clearAddBtn">Tozalash</button>
+        <button type="button" class="btn btn-success" id="addBtn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/>
+          </svg>
+          Qo'shish
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ╔══ PANEL 3: List ══╗ -->
+  <div class="panel">
+    <div class="panel-header">
+      <div class="panel-icon slate">📋</div>
+      <div>
+        <div class="panel-title">Mavjud Guruhlar</div>
+        <div class="panel-sub">Tahrirlash yoki o'chirish mumkin</div>
+      </div>
+    </div>
+    <div class="panel-body" style="padding-top:8px">
+      <div id="projectsList"></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ═══════════ EDIT MODAL ═══════════ -->
+<div class="modal-backdrop" id="editModal" style="display:none">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>✏️ Guruhni Tahrirlash</h3>
+      <button class="modal-close" id="modalCloseBtn">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="editId" />
+
+      <div class="form-group">
+        <label for="editImage">Guruh Rasmi URL (ixtiyoriy)</label>
+        <input type="text" id="editImage" placeholder="https://..." autocomplete="off" />
+        <div class="preview-wrap" id="editPrevWrap">
+          <img class="preview-img" id="editPrevImg" src="" alt="" />
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="editTeamName">Jamoa Nomi <span style="color:#dc2626">*</span></label>
+        <input type="text" id="editTeamName" autocomplete="off" />
+      </div>
+
+      <div class="form-group">
+        <label for="editNames">O'quvchilar Ism-Familiyasi <span style="color:#dc2626">*</span></label>
+        <textarea id="editNames" autocomplete="off"></textarea>
+        <span class="hint">Har bir ismni yangi qatorga yozing</span>
+      </div>
+
+      <div class="form-group">
+        <label for="editCanva">Canva Taqdimot Havolasi <span style="color:#dc2626">*</span></label>
+        <input type="text" id="editCanva" autocomplete="off" />
+      </div>
+
+      <div class="form-group">
+        <label for="editScratch">Scratch Loyiha Havolasi <span style="color:#dc2626">*</span></label>
+        <input type="text" id="editScratch" autocomplete="off" />
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" id="cancelEditBtn">Bekor qilish</button>
+      <button class="btn btn-primary" id="saveEditBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+             style="width:15px;height:15px">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/>
+        </svg>
+        Saqlash
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ TOAST ═══════════ -->
+<div id="toastContainer"></div>
+
+<!-- ═══════════ SCRIPT ═══════════ -->
+<script>
+  /* ════════════════════════════════
+     CONSTANTS
+  ════════════════════════════════ */
+  var PROJECTS_KEY = 'scratch_projects';
+  var BANNER_KEY   = 'scratch_banner';
+
+  /* ════════════════════════════════
+     HELPERS
+  ════════════════════════════════ */
+  function getProjects() {
+    try { return JSON.parse(localStorage.getItem(PROJECTS_KEY)) || []; }
+    catch(e) { return []; }
+  }
+
+  function saveProjects(arr) {
+    localStorage.setItem(PROJECTS_KEY, JSON.stringify(arr));
+    refreshBadge();
+  }
+
+  function genId() {
+    return Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+  }
+
+  function refreshBadge() {
+    var n = getProjects().length;
+    document.getElementById('topBadge').textContent = n + ' ta guruh';
+  }
+
+  function val(id) {
+    return document.getElementById(id).value.trim();
+  }
+
+  function setVal(id, v) {
+    document.getElementById(id).value = v || '';
+  }
+
+  function clearAdd() {
+    setVal('addImage', '');
+    setVal('addTeamName', '');
+    setVal('addNames', '');
+    setVal('addCanva', '');
+    setVal('addScratch', '');
+    hidePreview('addPrevWrap', 'addPrevImg');
+  }
+
+  /* ════════════════════════════════
+     TOAST
+  ════════════════════════════════ */
+  function toast(msg, type) {
+    type = type || 'ok';
+    var icons = { ok: '✅', err: '❌', info: 'ℹ️' };
+    var el = document.createElement('div');
+    el.className = 'toast ' + type;
+    el.innerHTML = '<span>' + icons[type] + '</span><span>' + msg + '</span>';
+    document.getElementById('toastContainer').appendChild(el);
+    setTimeout(function() {
+      el.classList.add('out');
+      el.addEventListener('animationend', function() { el.remove(); });
+    }, 3200);
+  }
+
+  /* ════════════════════════════════
+     HELPERS
+  ════════════════════════════════ */
+  function isTgPost(url) {
+    return /^https:\/\/t\.me\/[A-Za-z0-9_@]+\/\d+/.test(url || '');
+  }
+
+  function withProxy(url) {
+    return 'https://wsrv.nl/?url=' + encodeURIComponent(url);
+  }
+
+  /* load a direct image URL into an <img> element */
+  function loadDirectImg(img, wrap, src) {
+    img.removeAttribute('data-proxy');
+    img.onload  = function() { wrap.classList.add('show'); };
+    img.onerror = function() {
+      if (!this.getAttribute('data-proxy')) {
+        this.setAttribute('data-proxy', '1');
+        this.src = withProxy(src);
+      } else {
+        wrap.classList.remove('show');
+      }
+    };
+    img.src = src;
+  }
+
+  /* fetch og:image from Telegram post, then show it in the preview */
+  function loadTgPreview(img, wrap, postUrl) {
+    img.style.display = 'none';
+    wrap.classList.add('show');
+
+    /* show loading badge */
+    var badge = wrap.querySelector('.tg-note');
+    if (!badge) {
+      badge = document.createElement('div');
+      badge.className = 'tg-note';
+      wrap.appendChild(badge);
+    }
+    badge.textContent = '⏳ Yuklanmoqda...';
+
+    fetch('https://api.allorigins.win/get?url=' + encodeURIComponent(postUrl))
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        var tagM = (data.contents || '').match(/<meta[^>]+og:image[^>]+>/i);
+        if (!tagM) throw new Error('no tag');
+        var cM = tagM[0].match(/content="([^"]+)"/i);
+        if (!cM) throw new Error('no content');
+        var imgUrl = cM[1].replace(/&amp;/g, '&');
+
+        badge.remove();
+        img.style.display = '';
+        loadDirectImg(img, wrap, imgUrl);
+      })
+      .catch(function() {
+        badge.textContent = '⚠️ Rasm topilmadi';
+      });
+  }
+
+  /* ════════════════════════════════
+     IMAGE PREVIEW
+  ════════════════════════════════ */
+  function showPreview(wrapId, imgId, url) {
+    var wrap = document.getElementById(wrapId);
+    var img  = document.getElementById(imgId);
+
+    /* reset */
+    img.style.display = '';
+    img.src = '';
+    var oldBadge = wrap.querySelector('.tg-note');
+    if (oldBadge) oldBadge.remove();
+
+    if (isTgPost(url)) {
+      loadTgPreview(img, wrap, url);
+    } else {
+      loadDirectImg(img, wrap, url);
+    }
+  }
+
+  function hidePreview(wrapId, imgId) {
+    var wrap = document.getElementById(wrapId);
+    var img  = document.getElementById(imgId);
+    wrap.classList.remove('show');
+    img.style.display = '';
+    img.src = '';
+    var badge = wrap.querySelector('.tg-note');
+    if (badge) badge.remove();
+  }
+
+  function wirePreview(inputId, wrapId, imgId) {
+    var timer;
+    document.getElementById(inputId).addEventListener('input', function() {
+      clearTimeout(timer);
+      var url = this.value.trim();
+      if (!url) { hidePreview(wrapId, imgId); return; }
+      timer = setTimeout(function() { showPreview(wrapId, imgId, url); }, 700);
+    });
+  }
+
+  wirePreview('bannerUrl',  'bannerPrevWrap', 'bannerPrevImg');
+  wirePreview('addImage',   'addPrevWrap',    'addPrevImg');
+  wirePreview('editImage',  'editPrevWrap',   'editPrevImg');
+
+  /* ════════════════════════════════
+     BANNER
+  ════════════════════════════════ */
+  function initBannerInput() {
+    var saved = localStorage.getItem(BANNER_KEY) || '';
+    setVal('bannerUrl', saved);
+    if (saved) showPreview('bannerPrevWrap', 'bannerPrevImg', saved);
+  }
+
+  document.getElementById('saveBannerBtn').addEventListener('click', function() {
+    var url = val('bannerUrl');
+    if (url) {
+      localStorage.setItem(BANNER_KEY, url);
+      toast('Banner rasmi saqlandi!', 'ok');
+    } else {
+      localStorage.removeItem(BANNER_KEY);
+      toast('Banner o\'chirildi', 'info');
+    }
+  });
+
+  document.getElementById('clearBannerBtn').addEventListener('click', function() {
+    setVal('bannerUrl', '');
+    hidePreview('bannerPrevWrap', 'bannerPrevImg');
+    localStorage.removeItem(BANNER_KEY);
+    toast('Banner rasmi o\'chirildi', 'info');
+  });
+
+  /* ════════════════════════════════
+     ADD PROJECT
+  ════════════════════════════════ */
+  document.getElementById('addBtn').addEventListener('click', function() {
+    var teamName = val('addTeamName');
+    var names    = val('addNames');
+    var canva    = val('addCanva');
+    var scratch  = val('addScratch');
+    var image    = val('addImage');
+
+    /* validation */
+    if (!teamName){ toast('Jamoa nomini kiriting!',      'err'); return; }
+    if (!names)   { toast('Ism-familiyalarni kiriting!', 'err'); return; }
+    if (!canva)   { toast('Canva havolasini kiriting!',  'err'); return; }
+    if (!scratch) { toast('Scratch havolasini kiriting!','err'); return; }
+
+    var projects = getProjects();
+    projects.push({
+      id:          genId(),
+      image:       image,
+      teamName:    teamName,
+      names:       names,
+      canvaLink:   canva,
+      scratchLink: scratch,
+      createdAt:   Date.now()
+    });
+    saveProjects(projects);
+    renderList();
+
+    /* clear all fields manually — more reliable than form.reset() */
+    clearAdd();
+    toast("Guruh muvaffaqiyatli qo'shildi! 🎉", 'ok');
+  });
+
+  document.getElementById('clearAddBtn').addEventListener('click', function() {
+    clearAdd();
+  });
+
+  /* ════════════════════════════════
+     RENDER LIST
+  ════════════════════════════════ */
+  function namesToLine(raw) {
+    return (raw || '')
+      .split(/[\n,]/)
+      .map(function(n) { return n.trim(); })
+      .filter(Boolean)
+      .join(', ');
+  }
+
+  function renderList() {
+    var projects = getProjects();
+    var listEl   = document.getElementById('projectsList');
+    listEl.innerHTML = '';
+
+    if (projects.length === 0) {
+      listEl.innerHTML =
+        '<div class="empty-list">' +
+        '<div class="icon">📭</div>' +
+        '<p>Hali guruhlar qo\'shilmagan</p>' +
+        '</div>';
+      return;
+    }
+
+    projects.forEach(function(p, idx) {
+      var item = document.createElement('div');
+      item.className = 'list-item';
+
+      /* thumbnail */
+      var thumb = document.createElement('div');
+      thumb.className = 'list-thumb';
+      if (p.image) {
+        if (isTgPost(p.image)) {
+          /* Telegram post: show a small Telegram badge */
+          thumb.innerHTML =
+            '<div style="text-align:center;font-size:.65rem;font-weight:700;' +
+            'color:#2b6cb0;line-height:1.3;padding:4px">📱<br>Telegram</div>';
+        } else {
+          var tSrc = p.image;
+          var tImg = document.createElement('img');
+          tImg.src = tSrc;
+          tImg.alt = '';
+          tImg.onerror = function() {
+            if (!this.getAttribute('data-proxy')) {
+              this.setAttribute('data-proxy', '1');
+              this.src = withProxy(tSrc);
+            } else {
+              thumb.innerHTML = '👥';
+              thumb.style.fontSize = '1.8rem';
+            }
+          };
+          thumb.appendChild(tImg);
+        }
+      } else {
+        thumb.textContent = '👥';
+        thumb.style.fontSize = '1.8rem';
+      }
+
+      /* info */
+      var info = document.createElement('div');
+      info.className = 'list-info';
+      info.innerHTML =
+        '<div class="list-index">Guruh #' + (idx + 1) + '</div>' +
+        (p.teamName ? '<div class="list-team">' + escHtml(p.teamName) + '</div>' : '') +
+        '<div class="list-names">' + escHtml(namesToLine(p.names)) + '</div>' +
+        '<div class="list-links">' +
+          '<span class="chip canva">' +
+            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">' +
+            '<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>' +
+            'Canva</span>' +
+          '<span class="chip scratch">' +
+            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">' +
+            '<polygon points="5,3 19,12 5,21"/></svg>' +
+            'Scratch</span>' +
+        '</div>';
+
+      /* actions */
+      var actions = document.createElement('div');
+      actions.className = 'list-actions';
+
+      var editBtn = document.createElement('button');
+      editBtn.className = 'btn-sm btn-edit';
+      editBtn.innerHTML =
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">' +
+        '<path stroke-linecap="round" stroke-linejoin="round" ' +
+        'd="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07' +
+        'a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897z"/>' +
+        '</svg>Tahrirlash';
+      (function(pid) {
+        editBtn.addEventListener('click', function() { openEdit(pid); });
+      })(p.id);
+
+      var delBtn = document.createElement('button');
+      delBtn.className = 'btn-sm btn-delete';
+      delBtn.innerHTML =
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">' +
+        '<path stroke-linecap="round" stroke-linejoin="round" ' +
+        'd="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166' +
+        'm-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 ' +
+        '01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 ' +
+        '.562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 ' +
+        '0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18' +
+        '.037-2.09 1.022-2.09 2.201v.916"/>' +
+        '</svg>O\'chirish';
+      (function(pid) {
+        delBtn.addEventListener('click', function() { deleteProject(pid); });
+      })(p.id);
+
+      actions.appendChild(editBtn);
+      actions.appendChild(delBtn);
+      item.append(thumb, info, actions);
+      listEl.appendChild(item);
+    });
+  }
+
+  function escHtml(s) {
+    return String(s)
+      .replace(/&/g,'&amp;')
+      .replace(/</g,'&lt;')
+      .replace(/>/g,'&gt;')
+      .replace(/"/g,'&quot;');
+  }
+
+  /* ════════════════════════════════
+     DELETE
+  ════════════════════════════════ */
+  function deleteProject(id) {
+    if (!confirm("Bu guruhni o'chirishni tasdiqlaysizmi?")) return;
+    var projects = getProjects().filter(function(p) { return p.id !== id; });
+    saveProjects(projects);
+    renderList();
+    toast("Guruh o'chirildi", 'info');
+  }
+
+  /* ════════════════════════════════
+     EDIT MODAL
+  ════════════════════════════════ */
+  function openEdit(id) {
+    var p = getProjects().filter(function(x) { return x.id === id; })[0];
+    if (!p) return;
+
+    setVal('editId',       p.id);
+    setVal('editImage',    p.image       || '');
+    setVal('editTeamName', p.teamName    || '');
+    setVal('editNames',    p.names       || '');
+    setVal('editCanva',    p.canvaLink   || '');
+    setVal('editScratch',  p.scratchLink || '');
+
+    if (p.image) {
+      showPreview('editPrevWrap', 'editPrevImg', p.image);
+    } else {
+      hidePreview('editPrevWrap', 'editPrevImg');
+    }
+
+    document.getElementById('editModal').style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeEdit() {
+    document.getElementById('editModal').style.display = 'none';
+    document.body.style.overflow = '';
+    hidePreview('editPrevWrap', 'editPrevImg');
+  }
+
+  document.getElementById('modalCloseBtn').addEventListener('click', closeEdit);
+  document.getElementById('cancelEditBtn').addEventListener('click', closeEdit);
+
+  document.getElementById('editModal').addEventListener('click', function(e) {
+    if (e.target === this) closeEdit();
+  });
+
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' &&
+        document.getElementById('editModal').style.display !== 'none') {
+      closeEdit();
+    }
+  });
+
+  document.getElementById('saveEditBtn').addEventListener('click', function() {
+    var id       = val('editId');
+    var teamName = val('editTeamName');
+    var names    = val('editNames');
+    var canva    = val('editCanva');
+    var scratch  = val('editScratch');
+    var image    = val('editImage');
+
+    if (!teamName){ toast('Jamoa nomini kiriting!',      'err'); return; }
+    if (!names)   { toast('Ism-familiyalarni kiriting!', 'err'); return; }
+    if (!canva)   { toast('Canva havolasini kiriting!',  'err'); return; }
+    if (!scratch) { toast('Scratch havolasini kiriting!','err'); return; }
+
+    var projects = getProjects();
+    var idx = -1;
+    for (var i = 0; i < projects.length; i++) {
+      if (projects[i].id === id) { idx = i; break; }
+    }
+    if (idx === -1) { toast('Guruh topilmadi!', 'err'); return; }
+
+    projects[idx].image       = image;
+    projects[idx].teamName    = teamName;
+    projects[idx].names       = names;
+    projects[idx].canvaLink   = canva;
+    projects[idx].scratchLink = scratch;
+    projects[idx].updatedAt   = Date.now();
+
+    saveProjects(projects);
+    renderList();
+    closeEdit();
+    toast("O'zgarishlar saqlandi! ✏️", 'ok');
+  });
+
+  /* ════════════════════════════════
+     INIT
+  ════════════════════════════════ */
+  initBannerInput();
+  refreshBadge();
+  renderList();
+</script>
+</body>
+</html>
