@@ -655,6 +655,16 @@
     return 'https://wsrv.nl/?url=' + encodeURIComponent(url);
   }
 
+  /* Google Drive: extract file ID → direct CDN URL */
+  function gdriveDirect(url) {
+    var m = url.match(/\/d\/([a-zA-Z0-9_-]+)/) ||
+            url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+    return m ? 'https://lh3.googleusercontent.com/d/' + m[1] : null;
+  }
+  function isGDrive(url) {
+    return /drive\.google\.com|docs\.google\.com/.test(url || '');
+  }
+
   /* extract image URL from HTML — tries 4 og:image / twitter:image patterns */
   function extractOgImage(html) {
     var tries = [
@@ -674,17 +684,20 @@
 
   /* load a direct image URL into an <img> element */
   function loadDirectImg(img, wrap, src) {
+    /* convert Google Drive sharing link → direct CDN URL */
+    var actualSrc = (isGDrive(src) && gdriveDirect(src)) ? gdriveDirect(src) : src;
+
     img.removeAttribute('data-proxy');
     img.onload  = function() { wrap.classList.add('show'); };
     img.onerror = function() {
       if (!this.getAttribute('data-proxy')) {
         this.setAttribute('data-proxy', '1');
-        this.src = withProxy(src);
+        this.src = withProxy(actualSrc);
       } else {
         wrap.classList.remove('show');
       }
     };
-    img.src = src;
+    img.src = actualSrc;
   }
 
   /* fetch og:image from Telegram post, show it in the preview (2 proxy fallback) */

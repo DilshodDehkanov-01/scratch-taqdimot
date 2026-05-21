@@ -404,6 +404,16 @@
     return 'https://wsrv.nl/?url=' + encodeURIComponent(url);
   }
 
+  /* ── Google Drive: extract file ID and return direct CDN URL ── */
+  function gdriveDirect(url) {
+    var m = url.match(/\/d\/([a-zA-Z0-9_-]+)/) ||
+            url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+    return m ? 'https://lh3.googleusercontent.com/d/' + m[1] : null;
+  }
+  function isGDrive(url) {
+    return /drive\.google\.com|docs\.google\.com/.test(url || '');
+  }
+
   /* ── extract image URL from Telegram page HTML (tries 4 meta patterns) ── */
   function extractOgImage(html) {
     var tries = [
@@ -423,19 +433,22 @@
 
   /* ── load a direct image URL into a container element ── */
   function loadDirectImage(container, src) {
+    /* convert Google Drive sharing link → direct CDN URL */
+    var actualSrc = (isGDrive(src) && gdriveDirect(src)) ? gdriveDirect(src) : src;
+
     var img = document.createElement('img');
     img.alt = 'Guruh rasmi';
     img.onerror = function() {
       if (!this.dataset.proxy) {
         this.dataset.proxy = '1';
-        this.src = withProxy(src);
+        this.src = withProxy(actualSrc);
       } else {
         container.innerHTML =
           '<div class="img-placeholder"><div class="ph-icon">👥</div>' +
           '<span>Rasm yuklanmadi</span></div>';
       }
     };
-    img.src = src;
+    img.src = actualSrc;
     container.appendChild(img);
   }
 
